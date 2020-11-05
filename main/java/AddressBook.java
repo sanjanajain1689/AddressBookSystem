@@ -1,54 +1,30 @@
+import java.util.*;
+
 public class AddressBook {
-    String firstName;
-    String lastName;
-    String address, city, state, phoneNumber,email;
-    public String getFirstName() {
-        return firstName;
+    private String addressBookName;
+    private ArrayList<Contact> contactList;
+    public AddressBook() {
+        addressBookName = "";
+        contactList = new ArrayList<Contact>();
     }
-    public void setFirstName(String firstName) {
-        this.firstName = firstName;
+    public String getAddressBookName() {
+        return addressBookName;
     }
-    public String getLastName() {
-        return lastName;
+    public void setAddressBookName(String addressBookName) {
+        this.addressBookName = addressBookName;
     }
-    public void setLastName(String lastName) {
-        this.lastName = lastName;
+    public ArrayList<Contact> getContactList() {
+        return contactList;
     }
-    public String getAddress() {
-        return address;
+    public void setContactList(ArrayList<Contact> contactList) {
+        this.contactList = contactList;
     }
-    public void setAddress(String address) {
-        this.address = address;
+    public void sortContactListByFirstNameAsc() {
+        Comparator<Contact> contactComparator = (contact1, contact2) -> contact1.getFirstName().compareTo(contact2.getFirstName());
+        Collections.sort(contactList, contactComparator);
     }
-    public String getCity() {
-        return city;
+    public void sortContactListByFirstNameDesc() {
+        Comparator<Contact> contactComparator = (contact1, contact2) -> contact2.getFirstName().compareTo(contact1.getFirstName());
+        Collections.sort(contactList, contactComparator);
     }
-    public void setCity(String city) {
-        this.city = city;
-    }
-    public String getState() {
-        return state;
-    }
-    public void setState(String state) {
-        this.state = state;
-    }
-    public String getPhoneNumber() {
-        return phoneNumber;
-    }
-    public void setPhoneNumber(String phoneNumber) {
-        this.phoneNumber = phoneNumber;
-    }
-    public String getEmail() {
-        return email;
-    }
-    public void setEmail(String email) {
-        this.email = email;
-    }
-    public long getZip() {
-        return zip;
-    }
-    public void setZip(long zip) {
-        this.zip = zip;
-    }
-    long zip;
 }
