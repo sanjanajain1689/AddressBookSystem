@@ -1,6 +1,6 @@
 import java.util.*;
 
-public class AddressBook {
+public class AddressBook implements java.io.Serializable{
     private String addressBookName;
     private ArrayList<Contact> contactList;
     public AddressBook() {

@@ -1,5 +1,15 @@
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileOutputStream;
+import java.io.FileReader;
+import java.io.FileWriter;
+import java.io.IOException;
+import java.io.ObjectInputStream;
+import java.io.ObjectOutputStream;
 import java.util.*;
-import java.util.stream.*;
+
+import com.opencsv.CSVReader;
+import com.opencsv.CSVWriter;
 
 
 public class AddressBookMain {
@@ -18,6 +28,7 @@ public class AddressBookMain {
         int choice = 0;
         do
         {
+            AddressBookMain addressBookMain = new AddressBookMain();
             System.out.println("1. Add Address Book");
             System.out.println("2. Add Contact");
             System.out.println("3. Edit Contact");
@@ -25,7 +36,11 @@ public class AddressBookMain {
             System.out.println("5. Search Persons By City or State");
             System.out.println("6. Get Total Persons Count By City or State");
             System.out.println("7. Sort Contacts in Address Book");
-            System.out.println("8. Exit");
+            System.out.println("8. Write Address Book To File");
+            System.out.println("9. Read Address Book From File");
+            System.out.println("10. Write Address Book To CSV");
+            System.out.println("11. Read Address Book From CSV");
+            System.out.println("12. Exit");
             System.out.print("Enter your choice: ");
             choice = in.nextInt();
             in.nextLine();
@@ -33,62 +48,83 @@ public class AddressBookMain {
             {
                 case 1:
                 {
-                    addAddressBook();
+                    addressBookMain.addAddressBook();
                     break;
                 }
                 case 2:
                 {
-                    addContactToAddressBook();
+                    addressBookMain.addContactToAddressBook();
                     break;
                 }
                 case 3:
                 {
-                    editAddressBook();
+                    addressBookMain.editAddressBook();
                     break;
                 }
                 case 4:
                 {
-                    deleteAddressBook();
+                    addressBookMain.deleteAddressBook();
                     break;
                 }
                 case 5:
                 {
-                    viewPersonsByCityOrState();
+                    addressBookMain.viewPersonsByCityOrState();
                     break;
                 }
                 case 6:
                 {
-                    getCountOfPersonsByCityOrState();
+                    addressBookMain.getCountOfPersonsByCityOrState();
                     break;
                 }
                 case 7:
                 {
-                    sortContacts();
+                    addressBookMain.sortContacts();
+                    break;
+                }
+                case 8:
+                {
+                    addressBookMain.writeAddressBookToFile();
+                    break;
+                }
+                case 9:
+                {
+                    addressBookMain.readAddressBookFromFile();
+                    break;
+                }
+                case 10:
+                {
+                    addressBookMain.writeAddressBookToCSV();
+                    break;
+                }
+                case 11:
+                {
+                    addressBookMain.readAddressBookFromCSV();
                 }
             }
-        }while(choice!=8);
+        }while(choice!=12);
     }
 
-    private static void addAddressBook() {
+    private void addAddressBook() {
         System.out.print("Enter name for new address book: ");
         String addressBookName = in.nextLine();
         AddressBook addressBookObject = new AddressBook();
+        addressBookObject.setAddressBookName(addressBookName);
         addressBookMap.put(addressBookName, addressBookObject);
     }
 
-    private static String getAddressBookNameForEntry() {
+    private String getAddressBookNameForEntry() {
         System.out.print("Enter Address Book Name: ");
         return in.nextLine();
     }
 
-    private static boolean isAddressBookExist(String addressBookName) {
+    private boolean isAddressBookExist(String addressBookName) {
         if(addressBookMap.containsKey(addressBookName))
             return true;
         System.out.println("Address book does not exist");
         return false;
     }
 
-    private static Contact getContactDetails() {
+    private Contact getContactDetails() {
         Contact contact = new Contact();
         System.out.print("Enter first name: ");
         contact.setFirstName(in.nextLine());
@@ -110,7 +146,11 @@ public class AddressBookMain {
         return contact;
     }
 
-    private static void addContactToAddressBook() {
+    /**
+     * @param in
+     * Adds a contact to the dictionary
+     */
+    private void addContactToAddressBook() {
         String addressBookName = getAddressBookNameForEntry();
         if(isAddressBookExist(addressBookName) == false)
             return;
@@ -125,7 +165,11 @@ public class AddressBookMain {
         insertTimeUpdateMaps(contact.getCity(), contact.getState(), contact.getFirstName());
     }
 
-    private static void editAddressBook() {
+    /**
+     * @param in
+     * Edit a contact in dictionary
+     */
+    private void editAddressBook() {
         String addressBookName = getAddressBookNameForEntry();
         if(isAddressBookExist(addressBookName) == false)
             return;
@@ -149,7 +193,8 @@ public class AddressBookMain {
         System.out.println("Contact not found");
     }
 
-    private static void deleteAddressBook() {
+
+    private void deleteAddressBook() {
         String addressBookName = getAddressBookNameForEntry();
         if(isAddressBookExist(addressBookName) == false)
             return;
@@ -168,7 +213,9 @@ public class AddressBookMain {
             System.out.println("Contact not found");
         }
     }
-    private static boolean addressBookHasContact(ArrayList<Contact> contactList, Contact contact) {
+
+
+    private boolean addressBookHasContact(ArrayList<Contact> contactList, Contact contact) {
         try {
             if(contact.equals(contactList.stream().filter(e -> e.equals(contact)).findFirst().get()))
             {
@@ -181,7 +228,8 @@ public class AddressBookMain {
         return false;
     }
 
-    private static void viewPersonsByCityOrState() {
+
+    private void viewPersonsByCityOrState() {
         System.out.println("1. City \n"
                 + "2. State");
         System.out.print("Enter your choice: ");
@@ -205,7 +253,8 @@ public class AddressBookMain {
         }
     }
 
-    private static void updateMaps(String locality, String contactFirstName, HashMap<String, ArrayList<String>> map, int actionChoice) {
+
+    private void updateMaps(String locality, String contactFirstName, HashMap<String, ArrayList<String>> map, int actionChoice) {
 
         switch(actionChoice)
         {
@@ -234,25 +283,25 @@ public class AddressBookMain {
         }
     }
 
-    private static void insertTimeUpdateMaps(String city, String state, String firstName) {
+    private void insertTimeUpdateMaps(String city, String state, String firstName) {
         updateMaps(city, firstName, cityPersonMap, 1); //add new firstName to cityPersonMap
         updateMaps(state, firstName, statePersonMap, 1); //add new firstName to statePersonMap
     }
 
-    private static void editTimeUpdateMaps(String city, String state, String olderFirstName, String currentFirstName) {
+    private void editTimeUpdateMaps(String city, String state, String olderFirstName, String currentFirstName) {
         updateMaps(city, olderFirstName, cityPersonMap, 2); //remove old firstName from cityPersonMap
         updateMaps(city, currentFirstName, cityPersonMap, 1); //add new firstName to cityPersonMap
         updateMaps(state, olderFirstName, statePersonMap, 2); //remove old firstName from statePersonMap
         updateMaps(state, currentFirstName, statePersonMap, 1); //add new firstName to statePersonMap
     }
 
-    private static void deleteTimeUpdateMaps(String city, String state, String firstName) {
+    private void deleteTimeUpdateMaps(String city, String state, String firstName) {
         updateMaps(city, firstName, cityPersonMap, 2); //delete firstName from cityPersonMap
         updateMaps(state, firstName, statePersonMap, 2); //delete firstName from statePersonMap
     }
 
 
-    private static void getCountOfPersonsByCityOrState() {
+    private void getCountOfPersonsByCityOrState() {
         System.out.println("1. City \n"
                 + "2. State");
         System.out.print("Enter your choice (1/2): ");
@@ -287,7 +336,7 @@ public class AddressBookMain {
         }
     }
 
-    private static void sortContacts() {
+    private void sortContacts() {
         String addressBookName = getAddressBookNameForEntry();
         if(isAddressBookExist(addressBookName) == false)
             return;
@@ -325,7 +374,7 @@ public class AddressBookMain {
                         addressBookObject.sortContactListByZipAsc();
                 }
             }
-                break;
+            break;
             case 2:
             {
                 switch(orderByChoice)
@@ -349,5 +398,91 @@ public class AddressBookMain {
         }
         System.out.println("Contact list after sorting: ");
         addressBookObject.getContactList().stream().forEach(e -> System.out.println(e.toString()));
+    }
+
+    /**
+     * Adds an existing address book to the file
+     * File holds one address book at a time
+     */
+    private void writeAddressBookToFile() {
+        String addressBookName = getAddressBookNameForEntry();
+        if(isAddressBookExist(addressBookName) == false)
+            return;
+        AddressBook addressBook = addressBookMap.get(addressBookName);
+        String filename = "C:\\Users\\Praveen Satya\\eclipse-workspace\\AddressBookSystem\\src\\AddressBookFile.ser";
+        try
+        {
+            FileOutputStream file = new FileOutputStream(filename);
+            ObjectOutputStream out = new ObjectOutputStream(file);
+            out.writeObject(addressBook);
+            out.close();
+            file.close();
+            System.out.println("The address book has been written to file");
+        } catch(IOException ex) {
+            System.out.println("IOException is caught");
+        }
+    }
+
+    private void readAddressBookFromFile() {
+        String addressBookName = getAddressBookNameForEntry();
+        String filename ="C:\\Users\\hp\\IdeaProjects\\AddressBookProblem\\src\\AddressBookCSV.csv";
+        try
+        {
+            FileInputStream file = new FileInputStream(filename);
+            ObjectInputStream in = new ObjectInputStream(file);
+            AddressBook addressBook = (AddressBook)in.readObject();
+            if(!addressBookName.equals(addressBook.getAddressBookName()))
+                System.out.println("Address book '" + addressBookName + "' not found in file");
+            else
+                System.out.println("The address book has been read from file");
+            in.close();
+            file.close();
+        } catch(IOException ex) {
+            System.out.println("IOException is caught");
+        } catch(ClassNotFoundException ex) {
+            System.out.println("ClassNotFoundException is caught");
+        }
+    }
+
+    private void writeAddressBookToCSV() {
+        String addressBookName = getAddressBookNameForEntry();
+        if(isAddressBookExist(addressBookName) == false)
+            return;
+        AddressBook addressBook = addressBookMap.get(addressBookName);
+        String filename = "C:\\Users\\hp\\IdeaProjects\\AddressBookProblem\\src\\AddressBookCSV.csv";
+        File outputFile = new File(filename);
+        try (FileWriter outputFileWriter = new FileWriter(outputFile);
+             CSVWriter outputCSVWriter = new CSVWriter(outputFileWriter)){
+            String[] header = { "Address Book Name", "First Name", "Last Name", "Address", "City", "State", "PhoneNumber", "Email", "Zip" };
+            outputCSVWriter.writeNext(header);
+            for(Contact contact : addressBook.getContactList()) {
+                String[] rowData = { addressBookName, contact.getFirstName(), contact.getLastName(),
+                        contact.getAddress(), contact.getCity(), contact.getState(),
+                        contact.getPhoneNumber(), contact.getEmail(), Long.toString(contact.getZip()) };
+                outputCSVWriter.writeNext(rowData);
+            }
+        } catch (IOException e) {
+            System.out.println(e.getMessage());
+        }
+        System.out.println("Address Book added to CSV");
+    }
+
+    private void readAddressBookFromCSV() {
+        String filename = "C:\\Users\\hp\\IdeaProjects\\AddressBookProblem\\src\\AddressBookCSV.csv";
+        File inputFile = new File(filename);
+        try (FileReader inputFileReader = new FileReader(inputFile);
+             CSVReader inputCSVReader = new CSVReader(inputFileReader)){
+            String[] rowData = null;
+            String[] header = inputCSVReader.readNext();
+            while((rowData = inputCSVReader.readNext()) != null) {
+                for(int i=0; i<rowData.length; i++) {
+                    System.out.print(header[i] + ": " + rowData[i] + " | ");
+                }
+                System.out.println();
+            }
+        } catch (Exception e) {
+            System.out.println(e.getMessage());
+        }
+        System.out.println("Address Book read from CSV");
     }
 }
