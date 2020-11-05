@@ -251,7 +251,7 @@ public class AddressBookMain {
         updateMaps(state, firstName, statePersonMap, 2); //delete firstName from statePersonMap
     }
 
-    
+
     private static void getCountOfPersonsByCityOrState() {
         System.out.println("1. City \n"
                 + "2. State");
@@ -292,20 +292,58 @@ public class AddressBookMain {
         if(isAddressBookExist(addressBookName) == false)
             return;
         AddressBook addressBookObject = addressBookMap.get(addressBookName);
-        System.out.println("Sort contacts using first name by \n"
-                + "1.Ascending \n"
-                + "2.Descending");
+        System.out.println("Sort contacts in \n"
+                + "1. Ascending \n"
+                + "2. Descending");
         System.out.print("Enter your choice (1/2): ");
         int choice = in.nextInt();
+        in.nextLine();
+        System.out.println("Sort by \n"
+                + "1. First name \n"
+                + "2. City \n"
+                + "3. State \n"
+                + "4. Zip");
+        System.out.print("Enter your choice (1/2/3/4): ");
+        int orderByChoice = in.nextInt();
         in.nextLine();
         switch(choice)
         {
             case 1:
-                addressBookObject.sortContactListByFirstNameAsc();
+            {
+                switch(orderByChoice)
+                {
+                    case 1:
+                        addressBookObject.sortContactListByFirstNameAsc();
+                        break;
+                    case 2:
+                        addressBookObject.sortContactListByCityAsc();
+                        break;
+                    case 3:
+                        addressBookObject.sortContactListByStateAsc();
+                        break;
+                    case 4:
+                        addressBookObject.sortContactListByZipAsc();
+                }
+            }
                 break;
             case 2:
-                addressBookObject.sortContactListByFirstNameDesc();
-                break;
+            {
+                switch(orderByChoice)
+                {
+                    case 1:
+                        addressBookObject.sortContactListByFirstNameDesc();
+                        break;
+                    case 2:
+                        addressBookObject.sortContactListByCityDesc();
+                        break;
+                    case 3:
+                        addressBookObject.sortContactListByStateDesc();
+                        break;
+                    case 4:
+                        addressBookObject.sortContactListByZipDesc();
+                }
+            }
+            break;
             default:
                 System.out.println("Invalid Input");
         }
