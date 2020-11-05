@@ -27,4 +27,28 @@ public class AddressBook {
         Comparator<Contact> contactComparator = (contact1, contact2) -> contact2.getFirstName().compareTo(contact1.getFirstName());
         Collections.sort(contactList, contactComparator);
     }
+    public void sortContactListByCityAsc() {
+        Comparator<Contact> contactComparator = (contact1, contact2) -> contact1.getCity().compareTo(contact2.getCity());
+        Collections.sort(contactList, contactComparator);
+    }
+    public void sortContactListByCityDesc() {
+        Comparator<Contact> contactComparator = (contact1, contact2) -> contact2.getCity().compareTo(contact1.getCity());
+        Collections.sort(contactList, contactComparator);
+    }
+    public void sortContactListByStateAsc() {
+        Comparator<Contact> contactComparator = (contact1, contact2) -> contact1.getState().compareTo(contact2.getState());
+        Collections.sort(contactList, contactComparator);
+    }
+    public void sortContactListByStateDesc() {
+        Comparator<Contact> contactComparator = (contact1, contact2) -> contact2.getState().compareTo(contact1.getState());
+        Collections.sort(contactList, contactComparator);
+    }
+    public void sortContactListByZipAsc() {
+        Comparator<Contact> contactComparator = (contact1, contact2) -> ((Long)contact1.getZip()).compareTo((Long)contact2.getZip());
+        Collections.sort(contactList, contactComparator);
+    }
+    public void sortContactListByZipDesc() {
+        Comparator<Contact> contactComparator = (contact1, contact2) -> ((Long)contact2.getZip()).compareTo((Long)contact1.getZip());
+        Collections.sort(contactList, contactComparator);
+    }
 }
