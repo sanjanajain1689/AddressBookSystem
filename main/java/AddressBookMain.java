@@ -146,10 +146,7 @@ public class AddressBookMain {
         return contact;
     }
 
-    /**
-     * @param in
-     * Adds a contact to the dictionary
-     */
+
     private void addContactToAddressBook() {
         String addressBookName = getAddressBookNameForEntry();
         if(isAddressBookExist(addressBookName) == false)
@@ -165,10 +162,6 @@ public class AddressBookMain {
         insertTimeUpdateMaps(contact.getCity(), contact.getState(), contact.getFirstName());
     }
 
-    /**
-     * @param in
-     * Edit a contact in dictionary
-     */
     private void editAddressBook() {
         String addressBookName = getAddressBookNameForEntry();
         if(isAddressBookExist(addressBookName) == false)
@@ -409,7 +402,7 @@ public class AddressBookMain {
         if(isAddressBookExist(addressBookName) == false)
             return;
         AddressBook addressBook = addressBookMap.get(addressBookName);
-        String filename = "C:\\Users\\Praveen Satya\\eclipse-workspace\\AddressBookSystem\\src\\AddressBookFile.ser";
+        String filename = "C:\\Users\\hp\\IdeaProjects\\AddressBookProblem\\src\\AddressBookFile.ser";
         try
         {
             FileOutputStream file = new FileOutputStream(filename);
@@ -425,7 +418,7 @@ public class AddressBookMain {
 
     private void readAddressBookFromFile() {
         String addressBookName = getAddressBookNameForEntry();
-        String filename ="C:\\Users\\hp\\IdeaProjects\\AddressBookProblem\\src\\AddressBookCSV.csv";
+        String filename ="C:\\Users\\hp\\IdeaProjects\\AddressBookProblem\\src\\AddressBookFile.ser";
         try
         {
             FileInputStream file = new FileInputStream(filename);
