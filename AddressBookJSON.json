@@ -1,0 +1,15 @@
+{
+  "addressBookName": "Book1",
+  "contactList": [
+    {
+      "firstName": "Abhi",
+      "lastName": "Nav",
+      "address": "Thakur Niwas",
+      "city": "New Delhi",
+      "state": "Delhi",
+      "phoneNumber": "3215342",
+      "email": "wsfewrcg@fcerfc.com",
+      "zip": 1243521
+    }
+  ]
+}

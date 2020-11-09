@@ -7,7 +7,8 @@ import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.util.*;
-
+import com.google.gson.Gson;
+import com.google.gson.GsonBuilder;
 import com.opencsv.CSVReader;
 import com.opencsv.CSVWriter;
 
@@ -40,7 +41,9 @@ public class AddressBookMain {
             System.out.println("9. Read Address Book From File");
             System.out.println("10. Write Address Book To CSV");
             System.out.println("11. Read Address Book From CSV");
-            System.out.println("12. Exit");
+            System.out.println("12. Write Address Book To JSON");
+            System.out.println("13. Read Address Book From JSON");
+            System.out.println("14. Exit");
             System.out.print("Enter your choice: ");
             choice = in.nextInt();
             in.nextLine();
@@ -99,9 +102,19 @@ public class AddressBookMain {
                 case 11:
                 {
                     addressBookMain.readAddressBookFromCSV();
+                    break;
+                }
+                case 12:
+                {
+                    addressBookMain.writeAddressBookToJSON();
+                    break;
+                }
+                case 13:
+                {
+                    addressBookMain.readAddressBookFromJSON();
                 }
             }
-        }while(choice!=12);
+        }while(choice!=14);
     }
 
     private void addAddressBook() {
@@ -477,5 +490,34 @@ public class AddressBookMain {
             System.out.println(e.getMessage());
         }
         System.out.println("Address Book read from CSV");
+    }
+
+    private void writeAddressBookToJSON() {
+        String addressBookName = getAddressBookNameForEntry();
+        if(isAddressBookExist(addressBookName) == false)
+            return;
+        AddressBook addressBook = addressBookMap.get(addressBookName);
+        String filename = "C:\\Users\\hp\\IdeaProjects\\AddressBookProblem\\src\\AddressBookJSON.json";
+        File outputFile = new File(filename);
+        Gson gson = new GsonBuilder().setPrettyPrinting().create();
+        try (FileWriter outputFileWriter = new FileWriter(outputFile)) {
+            gson.toJson(addressBook, outputFileWriter);
+        } catch (Exception e) {
+            e.getMessage();
+        }
+        System.out.println("Address Book added to JSON");
+    }
+
+    private void readAddressBookFromJSON() {
+        String filename = "C:\\Users\\hp\\IdeaProjects\\AddressBookProblem\\src\\AddressBookJSON.json";
+        File inputFile = new File(filename);
+        Gson gson = new Gson();
+        try (FileReader inputFileReader = new FileReader(inputFile)) {
+            AddressBook addressBook = gson.fromJson(inputFileReader, AddressBook.class);
+            System.out.println("Address Book '" + addressBook.getAddressBookName() +
+                    "' read from JSON");
+        } catch (Exception e) {
+            e.getMessage();
+        }
     }
 }
