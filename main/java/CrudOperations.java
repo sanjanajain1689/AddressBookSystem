@@ -1,6 +1,7 @@
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
+import java.sql.ResultSetMetaData;
 import java.sql.SQLException;
 import java.sql.Statement;
 import java.util.Iterator;
@@ -94,6 +95,24 @@ public class CrudOperations {
         return null;
     }
 
+    public int readByDateAdded(String date1, String date2) {
+        System.out.println("Displaying contact added between " + date1 + " and " + date2);
+        Connection con = JDBCConnection.getInstance().getConnection();
+        try {
+            Statement stmt = con.createStatement();
+            String query = "select ab.ab_name, c.contact_id, c.first_name, c.last_name, c.phone_no, c.email "+
+                    "from address_book ab " +
+                    "right join contact c on ab.ab_id = c.ab_id " +
+                    "where c.date_added between cast('" + date1 +"' as date) " +
+                    "and cast('" + date2 +"' as date)";
+            ResultSet resultSet = stmt.executeQuery(query);
+            return displayResultSet(resultSet);
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        return 0;
+    }
+
     public void updateContact(String firstName, String phone) {
         try {
             Connection con = JDBCConnection.getInstance().getConnection();
@@ -132,5 +151,25 @@ public class CrudOperations {
                 System.out.println(contact);
             }
         }
+    }
+
+    private int displayResultSet(ResultSet resultSet) {
+        int count = 0;
+        try {
+            ResultSetMetaData resultSetMetaData = resultSet.getMetaData();
+            int columnsNumber = resultSetMetaData.getColumnCount();
+            while (resultSet.next()) {
+                for (int i = 1; i <= columnsNumber; i++) {
+                    if (i > 1) System.out.print(",  ");
+                    String columnValue = resultSet.getString(i);
+                    System.out.print(resultSetMetaData.getColumnName(i) + " : " + columnValue);
+                }
+                System.out.println();
+                count++;
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        return count;
     }
 }

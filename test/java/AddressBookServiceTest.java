@@ -47,4 +47,30 @@ public class AddressBookServiceTest {
         }
         Assert.assertTrue(dbContact.equalsObject(mapContact));
     }
+
+    @Test
+    public void givenTwoDates_WhenRetrievedContactsAddedBetweenDatesFromDB_ShouldReturnCorrectCount() {
+        try {
+            CrudOperations crudOperations = new CrudOperations();
+            int initialCount = crudOperations.readByDateAdded("2018-01-01", "2020-01-01");
+            System.out.println(initialCount);
+            Connection con = JDBCConnection.getInstance().getConnection();
+            Statement stmt = con.createStatement();
+            String query = "insert into contact (ab_id, first_name, last_name, " +
+                    "phone_no, email, date_added) values " +
+                    "(1, 'Dummy_fname', 'Dummy_lname', 'Dummy_phno', " +
+                    "'Dummy_email', '2018-09-09')";
+            stmt.executeUpdate(query);
+            int count = crudOperations.readByDateAdded("2018-01-01", "2020-01-01");
+            Assert.assertEquals(initialCount+1, count);
+
+            query = "delete from contact where first_name = 'Dummy_fname'";
+            stmt.executeUpdate(query);
+            count = crudOperations.readByDateAdded("2018-01-01", "2020-01-01");
+            Assert.assertEquals(initialCount, count);
+
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+    }
 }
