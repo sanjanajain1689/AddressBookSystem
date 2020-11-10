@@ -73,4 +73,18 @@ public class AddressBookServiceTest {
             e.printStackTrace();
         }
     }
+
+    @Test
+    public void givenCity_WhenRetrievedContactByCityFromDB_ShouldReturnCorrectCount() {
+        CrudOperations crudOperations = new CrudOperations();
+        int countForCity = crudOperations.readCountByCity("Salem");
+        Assert.assertEquals(2, countForCity);
+    }
+
+    @Test
+    public void givenState_WhenRetrievedContactByStateFromDB_ShouldReturnCorrectCount() {
+        CrudOperations crudOperations = new CrudOperations();
+        int countForState = crudOperations.readCountByState("Maharashtra");
+        Assert.assertEquals(2, countForState);
+    }
 }

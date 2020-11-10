@@ -113,6 +113,34 @@ public class CrudOperations {
         return 0;
     }
 
+    public int readCountByCity(String city) {
+        try {
+            Connection con = JDBCConnection.getInstance().getConnection();
+            Statement stmt = con.createStatement();
+            String query = "select count(contact_id) from address where city = '"+city+"' ";
+            ResultSet resultSet = stmt.executeQuery(query);
+            resultSet.next();
+            return resultSet.getInt("count(contact_id)");
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        return 0;
+    }
+
+    public int readCountByState(String state) {
+        try {
+            Connection con = JDBCConnection.getInstance().getConnection();
+            Statement stmt = con.createStatement();
+            String query = "select count(contact_id) from address where state = '"+state+"' ";
+            ResultSet resultSet = stmt.executeQuery(query);
+            resultSet.next();
+            return resultSet.getInt("count(contact_id)");
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        return 0;
+    }
+
     public void updateContact(String firstName, String phone) {
         try {
             Connection con = JDBCConnection.getInstance().getConnection();
