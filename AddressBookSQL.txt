@@ -1,0 +1,195 @@
+# UC 1
+CREATE DATABASE address_book_service;		# Create new DB
+USE address_book_service;					# Use address_book_service
+
+# UC 2
+CREATE TABLE addressbook
+(
+	first_name VARCHAR(100) NOT NULL,
+	last_name VARCHAR(100) NOT NULL,
+	address VARCHAR(250) NOT NULL,
+	city VARCHAR(50) NOT NULL,
+	state VARCHAR(50) NOT NULL,
+	zip VARCHAR(20) NOT NULL,
+	phone_no VARCHAR(20) NOT NULL,
+	email VARCHAR(100) NOT NULL
+);
+
+# UC 3
+# Insert records into addressbook table
+INSERT INTO addressbook 
+( first_name, last_name, address, city, state, zip, phone_no, email) VALUES
+( 'Shalini', 'Tripathi', 'B street', 'Salem', 'Tamil Nadu', '431112', '92834987723', 'shalini@gmail.com'),
+( 'Rahul', 'Jain', 'A street', 'Jodhpur', 'Rajasthan', '545666', '767324324', 'rahul@gmail.com'),
+( 'Kanu', 'Saxena', 'E street', 'Mumbai', 'Maharashtra', '873645', '999824324', 'kanu@gmail.com'),
+( 'Shourya', 'D', 'C street', 'Bangalore', 'Karnataka', '997433', '3298877552', 'shourya@gmail.com');
+
+# UC 4
+# Edit existing contacts
+UPDATE addressbook SET last_name = 'Dev'
+WHERE first_name = 'Shourya';
+
+# UC 5
+# Delete a record by field first_name
+DELETE FROM addressbook WHERE first_name = 'Rahul';
+
+# UC 6
+# Retreive records by city or state
+SELECT * FROM addressbook WHERE city = 'Salem' OR state = 'Maharashtra';
+
+# UC 7
+# Retrieve count of records grouped by city or state
+INSERT INTO addressbook 				# Adding more records to table
+( first_name, last_name, address, city, state, zip, phone_no, email) VALUES
+( 'Kumar', 'Ramesh', 'J street', 'Salem', 'Tamil Nadu', '431123', '9112287723', 'kumar@gmail@gmail.com'),
+( 'Aniket', 'Jain', 'L street', 'Pune', 'Maharashtra', '545234', '9283723424', 'aniket@gmail.com');
+
+SELECT city, COUNT(first_name) FROM addressbook
+GROUP BY city;
+SELECT state, COUNT(first_name) FROM addressbook
+GROUP BY state;
+
+# UC 8
+# Retreive records sorted by first_name for a given city
+SELECT * FROM addressbook
+WHERE city = 'Salem'
+ORDER BY first_name ASC;
+
+# UC 9
+# Extend addressbook to include fields addressbook_name & addressbook_type
+ALTER TABLE addressbook 
+ADD addressbook_name VARCHAR(50) NOT NULL FIRST;
+ALTER TABLE addressbook
+ADD addressbook_type VARCHAR(50) NOT NULL AFTER addressbook_name;
+
+# UC 10
+# Retreive count of contacts grouped by addressbook_type
+UPDATE addressbook SET addressbook_type = 'Family'				# Updating empty type fields
+WHERE first_name = 'Shalini' OR first_name = 'Kumar';
+UPDATE addressbook SET addressbook_type = 'Friends'
+WHERE first_name = 'Shourya' OR first_name = 'Kanu';
+UPDATE addressbook SET addressbook_type = 'Professional'
+WHERE first_name = 'Aniket';
+
+SELECT addressbook_type, COUNT(first_name) FROM addressbook
+GROUP BY addressbook_type;
+
+# UC 11
+# Add first with addressbook_type as Friends & Family both
+INSERT INTO addressbook 
+( addressbook_name, addressbook_type, first_name, last_name, address, city, state, zip, phone_no, email) VALUES
+( '', 'Friends', 'Kumar', 'Ramesh', 'J street', 'Salem', 'Tamil Nadu', '431123', '9112287723', 'kumar@gmail@gmail.com');
+
+# UC 12 
+# Use normalization to create new table structure
+DROP TABLE addressbook;											# delete table with redundant records
+CREATE TABLE address_book 										# Create address books
+(
+	ab_id INT UNSIGNED NOT NULL AUTO_INCREMENT PRIMARY KEY,
+	ab_name VARCHAR(50) NOT NULL
+);
+CREATE TABLE address_book_type									# Create contact types in address book
+(
+	abt_id INT UNSIGNED NOT NULL AUTO_INCREMENT PRIMARY KEY,
+	abt_name VARCHAR(50) NOT NULL
+);
+CREATE TABLE contact 											# Create contacts
+(
+	ab_id INT UNSIGNED NOT NULL,
+	contact_id INT UNSIGNED NOT NULL AUTO_INCREMENT,
+	first_name VARCHAR(100) NOT NULL,
+	last_name VARCHAR(100) NOT NULL,
+	phone_no VARCHAR(20) NOT NULL,
+	email VARCHAR(100) NOT NULL,
+	PRIMARY KEY (contact_id),
+	FOREIGN KEY (ab_id) REFERENCES address_book(ab_id)
+);
+CREATE TABLE contact_type										# Many-many bridge table between
+(																# contacts and contact types
+	contact_id INT UNSIGNED NOT NULL,
+	abt_id INT UNSIGNED NOT NULL,
+	FOREIGN KEY (contact_id) REFERENCES contact(contact_id),
+	FOREIGN KEY (abt_id) REFERENCES address_book_type(abt_id),
+	UNIQUE(contact_id, abt_id)
+);
+CREATE TABLE address											# Create multiple addresses for a contact
+(
+	contact_id INT UNSIGNED NOT NULL,
+	address VARCHAR(200) NOT NULL,
+	city VARCHAR(50) NOT NULL,
+	state VARCHAR(50) NOT NULL,
+	zip VARCHAR(20),
+	FOREIGN KEY (contact_id) REFERENCES contact(contact_id)
+);
+
+# Inserting values into normalized table structure
+INSERT INTO address_book (ab_name) VALUES						# Inserting address book
+('AB1');
+INSERT INTO address_book_type (abt_name) VALUES					# Inserting contact types in address book
+('Friends'),
+('Family'),
+('Professional');
+INSERT INTO contact												# Inserting contacts 
+(ab_id, first_name, last_name, phone_no, email) VALUES
+(1, 'Shalini', 'Tripathi', 1243526112, 'shalini@gmail'),
+(1, 'Shourya', 'Dev', 1926355299, 'shourya@gmail'),
+(1, 'Kanu', 'Saxena', 6352411552, 'kanu@gmail'),
+(1, 'Kumar', 'Ramesh', 5142378645, 'kumar@gmail'),
+(1, 'Aniket', 'Jain', 2354624132, 'aniket@gmail');
+INSERT INTO address 
+(contact_id, address, city, state, zip) VALUES					# Inserting addresses of contacts
+(1, 'B Street', 'Salem', 'Tamil Nadu', 432212),
+(2, 'C Street', 'Bangalore', 'Karnataka', 543212),
+(3, 'E Street', 'Mumbai', 'Maharashtra', 765432),
+(4, 'J Street', 'Salem', 'Tamil Nadu', 432244),
+(5, 'L Street', 'Pune', 'Maharashtra', 431234);
+INSERT INTO contact_type										# Inserting relations in many-many bridge table 
+(contact_id, abt_id) VALUES
+(1, 2),
+(2, 1),
+(3, 1),
+(4, 2),
+(5, 3),
+(4, 1);
+
+# UC 13
+# Repeat UC 6-10 with normalized table structure
+SELECT c.first_name, c.last_name, a.city						# UC 6
+FROM contact c, address a										# Retreive person by city
+WHERE c.contact_id = a.contact_id
+AND a.city = 'Salem';
+
+SELECT c.first_name, c.last_name, a.state						# UC 6
+FROM contact c, address a										# Retreive person by state
+WHERE c.contact_id = a.contact_id
+AND a.state = 'Maharashtra';
+
+SELECT city, COUNT(contact_id) FROM address						# UC 7
+GROUP BY city;													# Count contact by city or state
+SELECT state, COUNT(contact_id) FROM address
+GROUP BY state;
+
+SELECT c.first_name, c.last_name, a.city						# UC 8
+FROM contact c, address a										# Display contacts alphabetically
+WHERE c.contact_id = a.contact_id								# for a given city
+AND a.city = 'Salem'
+ORDER BY first_name, last_name;
+
+SELECT ab.ab_name, rs.first_name,								# UC 9 
+rs.last_name, rs.abt_name as type								# Display persons with corresponding
+FROM address_book ab,											# address book name and type
+(SELECT c.ab_id, c.first_name, c.last_name, abt.abt_name
+FROM contact c, address_book_type abt,
+contact_type ct
+WHERE ct.contact_id = c.contact_id AND
+ct.abt_id = abt.abt_id) rs
+WHERE rs.ab_id = ab.ab_id;
+
+SELECT rs.abt_name AS type, COUNT(rs.contact_id) AS count		# UC 10 
+FROM 															# Display count of contacts 
+(SELECT c.contact_id, abt.abt_name								# by type
+FROM contact c, address_book_type abt,
+contact_type ct
+WHERE ct.contact_id = c.contact_id AND
+ct.abt_id = abt.abt_id) rs
+GROUP BY rs.abt_name; 

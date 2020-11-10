@@ -1,17 +1,24 @@
-import java.io.File;
-import java.io.FileInputStream;
-import java.io.FileOutputStream;
-import java.io.FileReader;
-import java.io.FileWriter;
 import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
+import java.sql.Connection;
+import java.sql.SQLException;
+import java.sql.Statement;
 import java.util.*;
+
+import org.json.JSONArray;
+import org.json.JSONException;
+import org.json.JSONObject;
+import org.junit.Assert;
+
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import com.opencsv.CSVReader;
 import com.opencsv.CSVWriter;
 
+import io.restassured.RestAssured;
+import io.restassured.http.ContentType;
+import io.restassured.response.Response;
 
 public class AddressBookMain {
     public static Scanner in = new Scanner(System.in);
@@ -503,7 +510,7 @@ public class AddressBookMain {
         try (FileWriter outputFileWriter = new FileWriter(outputFile)) {
             gson.toJson(addressBook, outputFileWriter);
         } catch (Exception e) {
-            e.getMessage();
+            System.out.println(e.getMessage());
         }
         System.out.println("Address Book added to JSON");
     }
@@ -517,7 +524,283 @@ public class AddressBookMain {
             System.out.println("Address Book '" + addressBook.getAddressBookName() +
                     "' read from JSON");
         } catch (Exception e) {
-            e.getMessage();
+            System.out.println(e.getMessage());
+        }
+    }
+
+    public int getNoOfContactsInAddressBook(String addressBookName) {
+        return AddressBookMain.addressBookMap.get(addressBookName).contactList.size();
+    }
+
+    public boolean isLocalAddressBookContainsFirstNamePhoneNoRecord(String first_name, String phone_no) {
+        for(Contact contact : AddressBookMain.addressBookMap.get("AB1").contactList) {
+            if(contact.getFirstName().equals(first_name) && contact.getPhoneNumber().equals(phone_no))
+                return true;
+        }
+        return false;
+    }
+
+    public boolean isDBContainsFirstNamePhoneNoRecord(String first_name, String phone_no) {
+        try {
+            CrudOperations crudOperations = new CrudOperations();
+            Contact dbContact;
+            dbContact = crudOperations.readByName(first_name);
+            if(dbContact.getPhoneNumber().equals(phone_no))
+                return true;
+        } catch (RecordNotFoundInDB e) {
+            System.out.println(e.getMessage());
+        }
+        return false;
+    }
+
+    public void createDBRecordByFirstNameDate(String first_name, String date) {
+        try {
+            Connection con = JDBCConnection.getInstance().getConnection();
+            Statement stmt;
+            stmt = con.createStatement();
+            String query = "insert into contact (ab_id, first_name, last_name, " +
+                    "phone_no, email, date_added) values " +
+                    "(1, '" + first_name + "', 'Dummy_lname', 'Dummy_phno', " +
+                    "'Dummy_email', '" + date +"')";
+            stmt.executeUpdate(query);
+        } catch (SQLException e) {
+            System.out.println(e.getMessage());
+        }
+    }
+
+    public void deleteDBRecordByName(String first_name) {
+        try {
+            Connection con = JDBCConnection.getInstance().getConnection();
+            Statement stmt;
+            stmt = con.createStatement();
+            String query = "delete from contact where first_name = '" + first_name + "'";
+            stmt.executeUpdate(query);
+            con.setAutoCommit(true);
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+    }
+
+    public void createDBRecordsByContacts(ArrayList<Contact> contactList) {
+        CrudOperations crudOperations = new CrudOperations();
+        crudOperations.createMultipleRecords(contactList);
+        try {
+            Thread.sleep(1000);
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        }
+        System.out.println("Multiple records inserted");
+    }
+
+    public void deleteDBRecordsByFirstNames(ArrayList<String> contactFirstNames) {
+        try {
+            Connection con = JDBCConnection.getInstance().getConnection();
+            Statement stmt = con.createStatement();
+            String query;
+            for(String contactFirstName : contactFirstNames) {
+                query = "delete from contact where first_name = '" + contactFirstName + "'";
+                stmt.executeUpdate(query);
+            }
+            con.commit();
+            System.out.println("Contacts deleted");
+            con.setAutoCommit(true);
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+    }
+
+    public boolean isContactAdditionSuccess(String ab_name, int contact_id, int ab_id, String firstName, String lastName, String phoneNumber) {
+        AddressBook addressBookObject = new AddressBook();
+        ArrayList<Contact> contactList = new ArrayList<>();
+        Contact contact = new Contact(contact_id, ab_id, firstName, lastName, phoneNumber);
+        contactList.add(contact);
+        addressBookObject.setContactList(contactList);
+        addressBookMap.put(ab_name, addressBookObject);
+        return true;
+    }
+
+    public boolean isContactUpdationSuccess(String first_name, String ab_name, int contact_id, int ab_id, String newFirstName, String lastName, String phoneNumber) {
+        AddressBook addressBookObject = AddressBookMain.addressBookMap.get(ab_name);
+        ArrayList<Contact> contactList = addressBookObject.getContactList();
+        for(Contact contactInList : contactList)
+        {
+            if(contactInList.getFirstName().equals(first_name))
+            {
+                Contact contact = new Contact(contact_id, ab_id, newFirstName, lastName, phoneNumber);
+                contactList.set(contactList.indexOf(contactInList), contact);
+                addressBookObject.setContactList(contactList);
+                addressBookMap.put(ab_name, addressBookObject);
+                return true;
+            }
+        }
+        return false;
+    }
+
+    public boolean isContactDeletionSuccess(String ab_name, String firstName) {
+        AddressBook addressBookObject = AddressBookMain.addressBookMap.get(ab_name);
+        ArrayList<Contact> contactList = addressBookObject.getContactList();
+        try{
+            Contact contact = contactList.stream().filter(e -> e.getFirstName().equals(firstName)).findFirst().get();
+            contactList.remove(contact);
+            addressBookObject.setContactList(contactList);
+            addressBookMap.put(ab_name, addressBookObject);
+        } catch(NoSuchElementException e) {
+            System.out.println("Contact not found");
+            return false;
+        }
+        return true;
+    }
+
+    public boolean hasContact(String ab_name, int contact_id, int ab_id, String firstName, String lastName, String phoneNumber) {
+        AddressBook addressBookObject = AddressBookMain.addressBookMap.get(ab_name);
+        ArrayList<Contact> contactList = addressBookObject.getContactList();
+        Contact contact = new Contact(contact_id, ab_id, firstName, lastName, phoneNumber);
+        return addressBookHasContact(contactList, contact);
+    }
+
+    public boolean isContactWritingToFileSuccess(String ab_name, int contact_id, int ab_id, String firstName, String lastName,
+                                                 String phoneNumber) {
+        isContactAdditionSuccess(ab_name, contact_id, ab_id, firstName, lastName, phoneNumber);
+        String addressBookName = ab_name;
+        AddressBook addressBook = addressBookMap.get(addressBookName);
+        String filename = "C:\\Users\\Praveen Satya\\eclipse-workspace\\AddressBookSystem\\src\\AddressBookFile.ser";
+        try
+        {
+            FileOutputStream file = new FileOutputStream(filename);
+            ObjectOutputStream out = new ObjectOutputStream(file);
+            out.writeObject(addressBook);
+            out.close();
+            file.close();
+            System.out.println("The address book has been written to file");
+        } catch(IOException ex) {
+            System.out.println("IOException is caught");
+            return false;
+        }
+        return true;
+    }
+
+    public boolean isContactReadingFromFileSuccess(String ab_name) {
+        String addressBookName = ab_name;
+        String filename = "C:\\Users\\Praveen Satya\\eclipse-workspace\\AddressBookSystem\\src\\AddressBookFile.ser";
+        try
+        {
+            FileInputStream file = new FileInputStream(filename);
+            ObjectInputStream in = new ObjectInputStream(file);
+            AddressBook addressBook = (AddressBook)in.readObject();
+            if(!addressBookName.equals(addressBook.getAddressBookName()))
+                System.out.println("Address book '" + addressBookName + "' not found in file");
+            else
+                System.out.println("The address book has been read from file");
+            in.close();
+            file.close();
+        } catch(IOException ex) {
+            System.out.println("IOException is caught");
+            return false;
+        } catch(ClassNotFoundException ex) {
+            System.out.println("ClassNotFoundException is caught");
+            return false;
+        }
+        return true;
+    }
+
+    public boolean isContactWritingToCSVFileSuccess(String ab_name, int contact_id, int ab_id, String firstName, String lastName,
+                                                    String phoneNumber) {
+        isContactAdditionSuccess(ab_name, contact_id, ab_id, firstName, lastName, phoneNumber);
+        String addressBookName = ab_name;
+        AddressBook addressBook = addressBookMap.get(addressBookName);
+        String filename = "C:\\Users\\Praveen Satya\\eclipse-workspace\\AddressBookSystem\\src\\AddressBookJSON.json";
+        File outputFile = new File(filename);
+        Gson gson = new GsonBuilder().setPrettyPrinting().create();
+        try (FileWriter outputFileWriter = new FileWriter(outputFile)) {
+            gson.toJson(addressBook, outputFileWriter);
+        } catch (Exception e) {
+            System.out.println(e.getMessage());
+            return false;
+        }
+        System.out.println("Address Book added to JSON");
+        return true;
+    }
+
+    public boolean isContactReadingFromCSVFileSuccess(String ab_name) {
+        String filename = "C:\\Users\\Praveen Satya\\eclipse-workspace\\AddressBookSystem\\src\\AddressBookCSV.csv";
+        File inputFile = new File(filename);
+        try (FileReader inputFileReader = new FileReader(inputFile);
+             CSVReader inputCSVReader = new CSVReader(inputFileReader)){
+            String[] rowData = null;
+            String[] header = inputCSVReader.readNext();
+            while((rowData = inputCSVReader.readNext()) != null) {
+                for(int i=0; i<rowData.length; i++) {
+                    System.out.print(header[i] + ": " + rowData[i] + " | ");
+                }
+                System.out.println();
+            }
+        } catch (Exception e) {
+            System.out.println(e.getMessage());
+            return false;
+        }
+        System.out.println("Address Book read from CSV");
+        return true;
+    }
+
+    public boolean isContactWritingToJSONFileSuccess(String ab_name, int contact_id, int ab_id, String firstName, String lastName,
+                                                     String phoneNumber) {
+        isContactAdditionSuccess(ab_name, contact_id, ab_id, firstName, lastName, phoneNumber);
+        String addressBookName = ab_name;
+        AddressBook addressBook = addressBookMap.get(addressBookName);
+        String filename = "C:\\Users\\Praveen Satya\\eclipse-workspace\\AddressBookSystem\\src\\AddressBookJSON.json";
+        File outputFile = new File(filename);
+        Gson gson = new GsonBuilder().setPrettyPrinting().create();
+        try (FileWriter outputFileWriter = new FileWriter(outputFile)) {
+            gson.toJson(addressBook, outputFileWriter);
+        } catch (Exception e) {
+            System.out.println(e.getMessage());
+            return false;
+        }
+        System.out.println("Address Book added to JSON");
+        return true;
+    }
+
+    public boolean isContactReadingFromJSONFileSuccess(String ab_name) {
+        String filename = "C:\\Users\\Praveen Satya\\eclipse-workspace\\AddressBookSystem\\src\\AddressBookJSON.json";
+        File inputFile = new File(filename);
+        Gson gson = new Gson();
+        try (FileReader inputFileReader = new FileReader(inputFile)) {
+            AddressBook addressBook = gson.fromJson(inputFileReader, AddressBook.class);
+            System.out.println("Address Book '" + addressBook.getAddressBookName() +
+                    "' read from JSON");
+        } catch (Exception e) {
+            System.out.println(e.getMessage());
+            return false;
+        }
+        return true;
+    }
+
+    public int postContactToJsonServer(int contact_id, int ab_id, String first_name, String last_name, String phone) throws JsonServerException{
+        Contact contact = new Contact(contact_id, 1, "Ganesh", "Sundar", "2222333312");
+        if(RestAssured.get("/contacts/" + contact_id).getStatusCode() != 404)
+            throw new JsonServerException("The contact you are trying to post already exists in json server");
+        Response response = RestAssured.given().contentType(ContentType.JSON)
+                .accept(ContentType.JSON)
+                .body("{\"id\": "+ contact_id +", \"abid\": \""+ ab_id +"\", \"firstname\": \""+ first_name +"\", \"lastname\": \""+ last_name +"\", \"phone\": \""+ phone +"\"}")
+                .when()
+                .post("/contacts/create");
+        return response.getStatusCode();
+    }
+
+    public int getContactFromJsonServer() {
+        try {
+            Response contactList = RestAssured.get("/contacts/list");
+            JSONArray jsonArray = new JSONArray(contactList.asString());
+            for(int i=0; i<jsonArray.length(); i++) {
+                JSONObject jsonObject = jsonArray.getJSONObject(i);
+                Contact contact = new Contact(jsonObject.getInt("id"), jsonObject.getInt("abid"),
+                        jsonObject.getString("firstname"), jsonObject.getString("lastname"), jsonObject.getString("phone"));
+            }
+            System.out.println(contactList.asString());
+            return contactList.statusCode();
+        } catch (JSONException e) {
+            System.out.println(e.getMessage());
+            return 0;
         }
     }
 }

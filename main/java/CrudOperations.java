@@ -5,15 +5,16 @@ import java.sql.ResultSetMetaData;
 import java.sql.SQLException;
 import java.sql.Statement;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map;
 
 
 public class CrudOperations {
 
-    public boolean createRecord(int ab_id, String first_name, String last_name, String phone_no, String email, String address, String city, String state, int zip, ArrayList<String> type) {
+    public synchronized boolean createRecord(int ab_id, String first_name, String last_name, String phone_no, String email, String address, String city, String state, int zip, ArrayList<String> type) throws InvalidSqlOperationException {
+        Connection con = JDBCConnection.getInstance().getConnection();
         try {
-            Connection con = JDBCConnection.getInstance().getConnection();
             con.setAutoCommit(false);
 
             System.out.println("Inserting contact " + first_name + " into DB...");
@@ -40,13 +41,45 @@ public class CrudOperations {
 
             if(countAddressRecordsChanged>0 && countContactRecordsChanged>0) {
                 con.commit();
+                System.out.println(first_name + " inserted");
                 return true;
             }
+            else
+                throw new InvalidSqlOperationException("Contact cannot be inserted");
         } catch (SQLException e) {
             e.printStackTrace();
         }
         return false;
     }
+
+    public void createMultipleRecords(ArrayList<Contact> contactList) {
+        HashMap<Integer, Boolean> contactInsertionStatus = new HashMap<>();
+        for(Contact contact : contactList) {
+            Runnable task = () -> {
+                contactInsertionStatus.put(contact.hashCode(), false);
+                CrudOperations crudOperations = new CrudOperations();
+                try {
+                    crudOperations.createRecord(contact.getAb_id(), contact.getFirstName(),
+                            contact.getLastName(), contact.getPhoneNumber(), contact.getEmail(),
+                            contact.getAddress(), contact.getCity(), contact.getState(),
+                            contact.getZip(), contact.type);
+                } catch (InvalidSqlOperationException e) {
+                    e.printStackTrace();
+                }
+                contactInsertionStatus.put(contact.hashCode(), true);
+            };
+            Thread thread = new Thread(task);
+            thread.start();
+        }
+        while(contactInsertionStatus.containsValue(false)) {
+            try {
+                Thread.sleep(10);
+            } catch (InterruptedException e) {
+                e.printStackTrace();
+            }
+        }
+    }
+
     public void readAll() {
         try {
             Connection con = JDBCConnection.getInstance().getConnection();
@@ -94,7 +127,7 @@ public class CrudOperations {
         }
     }
 
-    public Contact readByName(String firstName) {
+    public Contact readByName(String firstName) throws RecordNotFoundInDB {
         try {
             Connection con = JDBCConnection.getInstance().getConnection();
             String query = "select ab.ab_name, c.contact_id, c.first_name, c.last_name, c.phone_no, c.email, a.address, a.city, a.state, a.zip, abt.abt_name " +
@@ -108,6 +141,8 @@ public class CrudOperations {
             PreparedStatement preparedStatement = con.prepareStatement(query);
             preparedStatement.setString(1, firstName);
             ResultSet resultSet = preparedStatement.executeQuery();
+            if(!resultSet.isBeforeFirst())
+                throw new RecordNotFoundInDB("Record for First Name " + firstName + " not found in DB");
             Contact contact = null;
             while(resultSet.next()) {
                 if(contact == null) {
