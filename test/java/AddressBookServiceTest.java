@@ -2,6 +2,8 @@ import java.sql.Connection;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
+import java.util.ArrayList;
+import java.util.Arrays;
 
 import org.junit.Assert;
 import org.junit.Test;
@@ -86,5 +88,12 @@ public class AddressBookServiceTest {
         CrudOperations crudOperations = new CrudOperations();
         int countForState = crudOperations.readCountByState("Maharashtra");
         Assert.assertEquals(2, countForState);
+    }
+
+    @Test
+    public void givenARecord_WhenSuccessfullyInsertedToDB_ShouldReturnTrue() {
+        CrudOperations crudOperations = new CrudOperations();
+        boolean output = crudOperations.createRecord(1, "Raghav", "Joshi", "4234234111", "raghav@gmail.com", "W Street", "Surat", "Gujrat", 234123, new ArrayList<String>(Arrays.asList("Friends", "Family")));
+        Assert.assertTrue(output);
     }
 }
