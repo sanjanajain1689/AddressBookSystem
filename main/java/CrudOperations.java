@@ -40,7 +40,6 @@ public class CrudOperations {
 
             if(countAddressRecordsChanged>0 && countContactRecordsChanged>0) {
                 con.commit();
-                con.setAutoCommit(true);
                 return true;
             }
         } catch (SQLException e) {
@@ -252,5 +251,19 @@ public class CrudOperations {
             e.printStackTrace();
         }
         return -1;
+    }
+
+    public int getNoOfContactsInDB() {
+        try {
+            Connection con = JDBCConnection.getInstance().getConnection();
+            Statement stmt = con.createStatement();
+            String query = "select count(contact_id) from contact";
+            ResultSet resultSet = stmt.executeQuery(query);
+            resultSet.next();
+            return resultSet.getInt("count(contact_id)");
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        return 0;
     }
 }
