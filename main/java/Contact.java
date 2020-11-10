@@ -1,11 +1,28 @@
 import java.util.ArrayList;
+import java.util.Objects;
 
 public class Contact implements java.io.Serializable{
     private int contact_id;
+    private int ab_id;
     private String firstName, lastName, phoneNumber, email;
     private String address, city, state;
     private int zip;
     public ArrayList<String> type;
+
+    public Contact(int ab_id, String firstName, String lastName, String phoneNumber, String email, String address,
+                   String city, String state, int zip, ArrayList<String> type) {
+        super();
+        this.setAb_id(ab_id);
+        this.firstName = firstName;
+        this.lastName = lastName;
+        this.phoneNumber = phoneNumber;
+        this.email = email;
+        this.address = address;
+        this.city = city;
+        this.state = state;
+        this.zip = zip;
+        this.type = type;
+    }
 
     public Contact() {
         type = new ArrayList<String>();
@@ -100,5 +117,19 @@ public class Contact implements java.io.Serializable{
                 this.state.equals(contact.state) &&
                 this.zip == contact.zip &&
                 this.type.equals(contact.type);
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(contact_id, firstName, lastName, phoneNumber, email, address,
+                city, state, zip, type);
+    }
+
+    public int getAb_id() {
+        return ab_id;
+    }
+
+    public void setAb_id(int ab_id) {
+        this.ab_id = ab_id;
     }
 }

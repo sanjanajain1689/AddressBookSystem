@@ -4,6 +4,7 @@ import java.sql.SQLException;
 import java.sql.Statement;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.HashMap;
 
 import org.junit.Assert;
 import org.junit.Test;
@@ -92,8 +93,60 @@ public class AddressBookServiceTest {
 
     @Test
     public void givenARecord_WhenSuccessfullyInsertedToDB_ShouldReturnTrue() {
-        CrudOperations crudOperations = new CrudOperations();
-        boolean output = crudOperations.createRecord(1, "Raghav", "Joshi", "4234234111", "raghav@gmail.com", "W Street", "Surat", "Gujrat", 234123, new ArrayList<String>(Arrays.asList("Friends", "Family")));
-        Assert.assertTrue(output);
+        try {
+            CrudOperations crudOperations = new CrudOperations();
+            boolean output = crudOperations.createRecord(1, "Raghav", "Joshi", "4234234111", "raghav@gmail.com", "W Street", "Surat", "Gujrat", 234123, new ArrayList<String>(Arrays.asList("Friends", "Family")));
+            Assert.assertTrue(output);
+            Connection con = JDBCConnection.getInstance().getConnection();
+            Statement stmt = con.createStatement();
+            String query = "delete from contact where first_name = 'Raghav'";
+            stmt.executeUpdate(query);
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+    }
+
+    @Test
+    public void given3Records_WhenSuccessfullyAddedToDB_ShouldReturnCorrectCount() {
+        try {
+            CrudOperations crudOperationsForCount = new CrudOperations();
+            int initialCount = crudOperationsForCount.getNoOfContactsInDB();
+            ArrayList<Contact> contactList = new ArrayList<Contact>();
+            contactList.add(new Contact(1, "TestName1", "T", "1111111111", "test@gmail.com",
+                    "T Street", "City", "State", 111111, new ArrayList<String>(Arrays.asList("Friends"))));
+            contactList.add(new Contact(1, "TestName2", "T", "1111111111", "test@gmail.com",
+                    "T Street", "City", "State", 111111, new ArrayList<String>(Arrays.asList("Friends"))));
+            contactList.add(new Contact(1, "TestName3", "T", "1111111111", "test@gmail.com",
+                    "T Street", "City", "State", 111111, new ArrayList<String>(Arrays.asList("Friends"))));
+            HashMap<Integer, Boolean> contactInsertionStatus = new HashMap<>();
+            for(Contact contact : contactList) {
+                Runnable task = () -> {
+                    contactInsertionStatus.put(contact.hashCode(), false);
+                    CrudOperations crudOperations = new CrudOperations();
+                    crudOperations.createRecord(contact.getAb_id(), contact.getFirstName(),
+                            contact.getLastName(), contact.getPhoneNumber(), contact.getEmail(),
+                            contact.getAddress(), contact.getCity(), contact.getState(),
+                            contact.getZip(), contact.type);
+                    contactInsertionStatus.put(contact.hashCode(), true);
+                };
+                Thread thread = new Thread(task);
+                thread.start();
+            }
+            while(contactInsertionStatus.containsValue(false)) {
+                try {
+                    Thread.sleep(10);
+                } catch (InterruptedException e) {
+                    e.printStackTrace();
+                }
+            }
+            Assert.assertEquals(initialCount+3, crudOperationsForCount.getNoOfContactsInDB());
+            Connection con = JDBCConnection.getInstance().getConnection();
+            Statement stmt = con.createStatement();
+            String query = "delete from contact where first_name in ('TestName1', 'TestName2', 'TestName3')";
+            stmt.executeUpdate(query);
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+
     }
 }
