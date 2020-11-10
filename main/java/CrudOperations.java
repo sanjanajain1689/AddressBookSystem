@@ -4,11 +4,50 @@ import java.sql.ResultSet;
 import java.sql.ResultSetMetaData;
 import java.sql.SQLException;
 import java.sql.Statement;
+import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.Map;
 
 
 public class CrudOperations {
+
+    public boolean createRecord(int ab_id, String first_name, String last_name, String phone_no, String email, String address, String city, String state, int zip, ArrayList<String> type) {
+        try {
+            Connection con = JDBCConnection.getInstance().getConnection();
+            con.setAutoCommit(false);
+
+            System.out.println("Inserting contact " + first_name + " into DB...");
+
+            String query = "insert into contact (ab_id, first_name, last_name, phone_no, email, date_added) value " +
+                    "(?,?,?,?,?, date(now()) )";
+            PreparedStatement preparedStatementContact = con.prepareStatement(query);
+            preparedStatementContact.setInt(1, ab_id);
+            preparedStatementContact.setString(2, first_name);
+            preparedStatementContact.setString(3, last_name);
+            preparedStatementContact.setString(4, phone_no);
+            preparedStatementContact.setString(5, email);
+            int countContactRecordsChanged = preparedStatementContact.executeUpdate();
+
+            query = "insert into address (contact_id, address, city, state, zip) values" +
+                    "(?,?,?,?,?)";
+            PreparedStatement preparedStatementAddress = con.prepareStatement(query);
+            preparedStatementAddress.setInt(1, getContactIdByName(first_name));
+            preparedStatementAddress.setString(2, address);
+            preparedStatementAddress.setString(3, city);
+            preparedStatementAddress.setString(4, state);
+            preparedStatementAddress.setInt(5, zip);
+            int countAddressRecordsChanged = preparedStatementAddress.executeUpdate();
+
+            if(countAddressRecordsChanged>0 && countContactRecordsChanged>0) {
+                con.commit();
+                con.setAutoCommit(true);
+                return true;
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        return false;
+    }
     public void readAll() {
         try {
             Connection con = JDBCConnection.getInstance().getConnection();
@@ -199,5 +238,19 @@ public class CrudOperations {
             e.printStackTrace();
         }
         return count;
+    }
+
+    public int getContactIdByName(String first_name) {
+        try {
+            Connection con = JDBCConnection.getInstance().getConnection();
+            Statement stmt = con.createStatement();
+            String query = "select contact_id from contact where first_name = '" + first_name + "'";
+            ResultSet resultSet = stmt.executeQuery(query);
+            resultSet.next();
+            return resultSet.getInt("contact_id");
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        return -1;
     }
 }
