@@ -2,7 +2,7 @@ import java.util.*;
 
 public class AddressBook implements java.io.Serializable{
     private String addressBookName;
-    private ArrayList<Contact> contactList;
+    public ArrayList<Contact> contactList;
     public AddressBook() {
         addressBookName = "";
         contactList = new ArrayList<Contact>();
@@ -44,11 +44,11 @@ public class AddressBook implements java.io.Serializable{
         Collections.sort(contactList, contactComparator);
     }
     public void sortContactListByZipAsc() {
-        Comparator<Contact> contactComparator = (contact1, contact2) -> ((Long)contact1.getZip()).compareTo((Long)contact2.getZip());
+        Comparator<Contact> contactComparator = (contact1, contact2) -> ((Integer)contact1.getZip()).compareTo((Integer)contact2.getZip());
         Collections.sort(contactList, contactComparator);
     }
     public void sortContactListByZipDesc() {
-        Comparator<Contact> contactComparator = (contact1, contact2) -> ((Long)contact2.getZip()).compareTo((Long)contact1.getZip());
+        Comparator<Contact> contactComparator = (contact1, contact2) -> ((Integer)contact2.getZip()).compareTo((Integer)contact1.getZip());
         Collections.sort(contactList, contactComparator);
     }
 }

@@ -154,7 +154,7 @@ public class AddressBookMain {
         System.out.print("Enter email: ");
         contact.setEmail(in.nextLine());
         System.out.print("Enter zip: ");
-        contact.setZip(in.nextLong());
+        contact.setZip(in.nextInt());
         in.nextLine();
         return contact;
     }
