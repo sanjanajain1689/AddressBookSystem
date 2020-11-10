@@ -1,8 +1,16 @@
+import java.util.ArrayList;
+
 public class Contact implements java.io.Serializable{
-    private String firstName;
-    private String lastName;
-    private String address, city, state, phoneNumber,email;
-    private long zip;
+    private int contact_id;
+    private String firstName, lastName, phoneNumber, email;
+    private String address, city, state;
+    private int zip;
+    public ArrayList<String> type;
+
+    public Contact() {
+        type = new ArrayList<String>();
+    }
+
     public String getFirstName() {
         return firstName;
     }
@@ -45,11 +53,18 @@ public class Contact implements java.io.Serializable{
     public void setEmail(String email) {
         this.email = email;
     }
-    public long getZip() {
+    public int getZip() {
         return zip;
     }
-    public void setZip(long zip) {
+    public void setZip(int zip) {
         this.zip = zip;
+    }
+
+    public int getContact_id() {
+        return contact_id;
+    }
+    public void setContact_id(int emp_id) {
+        this.contact_id = emp_id;
     }
 
     @Override
@@ -62,13 +77,28 @@ public class Contact implements java.io.Serializable{
 
     @Override
     public String toString() {
-        return "First Name: " + firstName +
+        return "Contact ID: " + contact_id +
+                ", First Name: " + firstName +
                 ", Last Name: " + lastName +
+                ", Phone number: " + phoneNumber +
+                ", Email: " + email +
                 ", Address: " + address +
                 ", City: " + city +
                 ", State: " + state +
-                ", Phone number: " + phoneNumber +
-                ", Email: " + email +
-                ", Zip: " + zip;
+                ", Zip: " + zip +
+                ", Type: " + type;
+    }
+
+    public boolean equalsObject(Contact contact) {
+        return this.contact_id == contact.contact_id &&
+                this.firstName.equals(contact.firstName) &&
+                this.lastName.equals(contact.lastName) &&
+                this.phoneNumber.equals(contact.phoneNumber) &&
+                this.email.equals(contact.email) &&
+                this.address.equals(contact.address) &&
+                this.city.equals(contact.city) &&
+                this.state.equals(contact.state) &&
+                this.zip == contact.zip &&
+                this.type.equals(contact.type);
     }
 }
